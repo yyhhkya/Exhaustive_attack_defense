@@ -10,7 +10,6 @@ clear
 
 echo ""
 echo "+----------------------------------------------------------------------------------+"
-echo "| This script analyzes whether the LOG log checking the server is cracked by brute |"
 echo "| 本脚本通过分析log日志检查服务器是否被暴力破解                                    |"
 echo "|                                                                                  |"
 echo "| GitHub项目地址 ${GITHUB_URL}                         |"

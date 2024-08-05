@@ -10,7 +10,6 @@ GITHUB_URL="https://github.com/yyhhkya/Exhaustive_attack_defense"
 log_num=$(wc -l < /var/log/auth.log)
 verification_failed=$(grep "Failed password" /var/log/auth.log | wc -l)
 
-
 clear
 
 echo ""
@@ -37,8 +36,9 @@ echo "[4]统计登录失败的用户"
 echo "---"
 echo "[5]一键禁止root用户以外的用户登录"
 echo "[6]一键禁止使用密钥登录"
+echo "[7]一键启用root用户远程登录"
 echo "---"
-echo "[7]重启SSH服务"
+echo "[8]重启SSH服务"
 echo ""
 read -p "请输入序号: " num
 
@@ -65,18 +65,24 @@ elif [ ${num} = 4 ]; then
     lastb | awk '{print $1}' | sort | uniq -c | sort -nr
     read
 elif [ ${num} = 5 ]; then
-    result=$(grep -nE '^AllowUsers' /etc/ssh/sshd_config)
+    result=$(grep -nE '^PermitRootLogin yes' /etc/ssh/sshd_config)
     if [ -n "${result}" ]; then
-        line_number=$(echo "${result}" | cut -d: -f1)
-        content=$(echo "${result}" | cut -d: -f2-)
-        echo ""
-        echo "已存在相关配置，停止操作！"
-        echo "位于第 ${line_number} 行: ${content} "
+        result=$(grep -nE '^AllowUsers' /etc/ssh/sshd_config)
+        if [ -n "${result}" ]; then
+            line_number=$(echo "${result}" | cut -d: -f1)
+            content=$(echo "${result}" | cut -d: -f2-)
+            echo ""
+            echo "已存在相关配置，停止操作！"
+            echo "位于第 ${line_number} 行: ${content} "
+        else
+            echo -e "\n\n# Exhaustive_attack_defense Config(一键禁止root用户以外的用户登录)\nAllowUsers root" | tee -a /etc/ssh/sshd_config > /dev/null
+            echo ""
+            echo "已执行操作！"
+            echo "请重启SSH服务以应用配置"
+        fi
     else
-        echo -e "\n\n# Exhaustive_attack_defense Config(一键禁止root用户以外的用户登录)\nAllowUsers root" | tee -a /etc/ssh/sshd_config > /dev/null
         echo ""
-        echo "已执行操作！"
-        echo "请重启SSH服务以应用配置"
+        echo "当前未启用root用户远程登录，停止操作！"
     fi
     read
 elif [ ${num} = 6 ]; then
@@ -95,6 +101,21 @@ elif [ ${num} = 6 ]; then
     fi
     read
 elif [ ${num} = 7 ]; then
+    result=$(grep -nE '^PermitRootLogin' /etc/ssh/sshd_config)
+    if [ -n "${result}" ]; then
+        line_number=$(echo "${result}" | cut -d: -f1)
+        content=$(echo "${result}" | cut -d: -f2-)
+        echo ""
+        echo "已存在相关配置，停止操作！"
+        echo "位于第 ${line_number} 行: ${content} "
+    else
+        echo -e "\n\n# Exhaustive_attack_defense Config(一键启用root用户远程登录)\nPermitRootLogin yes" | tee -a /etc/ssh/sshd_config > /dev/null
+        echo ""
+        echo "已执行操作！"
+        echo "请重启SSH服务以应用配置"
+    fi
+    read
+elif [ ${num} = 8 ]; then
     echo ""
     systemctl restart sshd
     echo "已执行重启！"
@@ -102,5 +123,3 @@ elif [ ${num} = 7 ]; then
 fi
 
 done
-
-
